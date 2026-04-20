@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
+import org.apache.http.util.EntityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,7 +75,9 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     """.formatted(title, body);
             Notification notification = new Notification(subscription, payload);
             PushService pushService = new PushService(properties.getPublicKey(), properties.getPrivateKey(), properties.getSubject());
-            pushService.send(notification);
+            var response = pushService.send(notification);
+            System.out.println("Status : " + response.getStatusLine().getStatusCode());
+            System.out.println(EntityUtils.toString(response.getEntity()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
