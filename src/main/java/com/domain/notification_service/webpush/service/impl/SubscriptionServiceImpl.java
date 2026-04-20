@@ -10,11 +10,12 @@ import com.domain.notification_service.webpush.entity.SubscriptionEntity;
 import com.domain.notification_service.webpush.properties.WebPushProperties;
 import com.domain.notification_service.webpush.repository.SubscriptionRepository;
 import com.domain.notification_service.webpush.service.SubscriptionService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -53,7 +55,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         });
     }
 
-    @Async
     @Override
     public void notifyUser(String email, String title, String body) {
         List<SubscriptionEntity> subscriptions = repository.findByUserEmail(email);
@@ -64,23 +65,30 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 pushService.setPublicKey(properties.getPublicKey());
                 pushService.setPrivateKey(properties.getPrivateKey());
                 pushService.setSubject(properties.getSubject());
-                pushService.send(notification);
+                try {
+                    var response = pushService.send(notification);
+                    System.out.println("STATUS : " + response.getStatusLine().getReasonPhrase());
+                    System.out.println(response.getEntity());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Notification getNotification(String title, String body, SubscriptionEntity subscription) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
+    private Notification getNotification(String title, String body, SubscriptionEntity subscription) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, JsonProcessingException {
         Subscription.Keys keys = new Subscription.Keys(subscription.getP256dh(), subscription.getAuth());
         Subscription sub = new Subscription(subscription.getEndpoint(), keys);
-        String payload = """
-                {
-                "title": "%s",
-                "body": "%s",
-                "url": "/chat"
-                }
-                """.formatted(title, body);
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, String> data = Map.of(
+                "title", title,
+                "body", body,
+                "url", "/chat"
+        );
+
+        String payload = mapper.writeValueAsString(data);
         return new Notification(sub, payload);
     }
 

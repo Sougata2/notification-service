@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface SubscriptionRepository extends JpaRepository<SubscriptionEntity, Long> {
-    @Query("select s from SubscriptionEntity s where s.endpoint = :endpoint and s.user.email = :email")
+    @Query("select s from SubscriptionEntity s where s.endpoint = :endpoint and s.user.email = :userEmail")
     Optional<SubscriptionEntity> findByEndpointAndUserEmail(String endpoint, String userEmail);
 
     @Query("select s from SubscriptionEntity s where s.user.email = :email")
