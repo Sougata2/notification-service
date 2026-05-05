@@ -5,10 +5,7 @@ import com.domain.notification_service.webpush.dto.SubscriptionRequestDto;
 import com.domain.notification_service.webpush.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,6 +16,12 @@ public class WebPushController {
     @PostMapping("/subscribe")
     public ResponseEntity<Void> subscribe(@RequestBody SubscriptionRequestDto dto) {
         service.subscribe(dto);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/unsubscribe")
+    public ResponseEntity<Void> unsubscribe(@RequestBody SubscriptionRequestDto dto) {
+        service.unsubscribe(dto);
         return ResponseEntity.ok().build();
     }
 

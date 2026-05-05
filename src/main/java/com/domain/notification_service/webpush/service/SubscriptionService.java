@@ -6,4 +6,6 @@ public interface SubscriptionService {
     void subscribe(SubscriptionRequestDto dto);
 
     void notifyUser(String email, String title, String body);
+
+    void unsubscribe(SubscriptionRequestDto dto);
 }

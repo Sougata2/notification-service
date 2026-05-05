@@ -62,6 +62,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 
+    @Override
+    public void unsubscribe(SubscriptionRequestDto dto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        repository.findByEndpointAndUserEmail(dto.getEndpoint(), username)
+                .ifPresent(repository::delete);
+    }
+
     private void sendNotification(SubscriptionEntity sub, String title, String body) {
         try {
             Subscription.Keys keys = new Subscription.Keys(sub.getP256dh(), sub.getAuth());
@@ -76,7 +83,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             Notification notification = new Notification(subscription, payload);
             PushService pushService = new PushService(properties.getPublicKey(), properties.getPrivateKey(), properties.getSubject());
             var response = pushService.send(notification);
-            System.out.println("Status : " + response.getStatusLine().getStatusCode());
+            System.out.printf("%s Status : %s", sub.getUser().getEmail(), response.getStatusLine().getStatusCode());
             System.out.println(EntityUtils.toString(response.getEntity()));
         } catch (Exception e) {
             throw new RuntimeException(e);
